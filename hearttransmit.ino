@@ -18,49 +18,33 @@ String FullData;
 SYSTEM_THREAD(ENABLED);
 
 void setup() {
-delay(1000);
-digitalWrite(TX, LOW);
-delay(1000);
-
-Serial.begin(115200);
-
-Serial1.begin(115200);
-
-Serial1.setTimeout(15000);
-
-delay(1000);
-
-Serial1.println("U");
-Checker();
-
-Serial1.println("mac pause");
-Checker();
-
-Serial1.println("radio set mod fsk");
-Checker();
-
-Serial1.println("radio set freq 434000000");
-Checker();
-
-Serial1.println("radio set bitrate 250000");
-Checker();
-
-Serial1.println("radio set prlen 48");
-Checker();
-
-Serial1.println("radio set afcbw 166.7");
-Checker();
-
-Serial1.println("radio set rxbw 100");
-Checker();
-
-Serial1.println("radio set fdev 100000");
-Checker();
-
-Serial1.println("radio set wdt 1000");
-Checker();
-
-delay(5);
+  delay(1000);
+  digitalWrite(TX, LOW);
+  delay(1000);
+  Serial.begin(115200);
+  Serial1.begin(115200);
+  Serial1.setTimeout(15000);
+  delay(1000);
+  Serial1.println("U");
+  Checker();
+  Serial1.println("mac pause");
+  Checker();
+  Serial1.println("radio set mod fsk");
+  Checker();
+  Serial1.println("radio set freq 434000000");
+  Checker();
+  Serial1.println("radio set bitrate 250000");
+  Checker();
+  Serial1.println("radio set prlen 48");
+  Checker();
+  Serial1.println("radio set afcbw 166.7");
+  Checker();
+  Serial1.println("radio set rxbw 100");
+  Checker();
+  Serial1.println("radio set fdev 100000");
+  Checker();
+  Serial1.println("radio set wdt 1000");
+  Checker();
 }
 
 // Replace /n with a zero for strcmp!!
@@ -75,9 +59,9 @@ unsigned long currMillis = millis();
 //     Connecting = makeConnection();
 // }
 
-Serial1.println("radio rx 0");
-Checker();
-Checker2();
+//Serial1.println("radio rx 0");
+//Checker();
+//Checker2();
 
 //Send();
 // Serial1.println("radio rx 0");
