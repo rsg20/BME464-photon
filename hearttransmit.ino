@@ -163,9 +163,9 @@ bool CheckRadioRxStatus(){
     else if(strcmp(Status, "radio_err")){
         return true;
     }
-    else{
-        return true;
-    }
+    // else{
+    //     return true;
+    // }
 }
 
 void Send(char in[CharPerSend]){
