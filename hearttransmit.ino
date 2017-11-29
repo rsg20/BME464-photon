@@ -28,26 +28,7 @@ void setup() {
   Serial1.begin(115200);
   Serial1.setTimeout(15000);
   delay(1000);
-  Serial1.println("U");
-  Checker();
-  Serial1.println("mac pause");
-  Checker();
-  Serial1.println("radio set mod fsk");
-  Checker();
-  Serial1.println("radio set freq 434000000");
-  Checker();
-  Serial1.println("radio set bitrate 250000");
-  Checker();
-  Serial1.println("radio set prlen 48");
-  Checker();
-  Serial1.println("radio set afcbw 166.7");
-  Checker();
-  Serial1.println("radio set rxbw 100");
-  Checker();
-  Serial1.println("radio set fdev 100000");
-  Checker();
-  Serial1.println("radio set wdt 1000");
-  Checker();
+  RNInit();
 }
 
 // Replace /n with a zero for strcmp!!
@@ -79,6 +60,29 @@ Checker2();
 // Serial.printlnf(finalChar);
  }
 
+
+void RNInit(){
+  Serial1.println("U");
+  Checker();
+  Serial1.println("mac pause");
+  Checker();
+  Serial1.println("radio set mod fsk");
+  Checker();
+  Serial1.println("radio set freq 434000000");
+  Checker();
+  Serial1.println("radio set bitrate 250000");
+  Checker();
+  Serial1.println("radio set prlen 48");
+  Checker();
+  Serial1.println("radio set afcbw 166.7");
+  Checker();
+  Serial1.println("radio set rxbw 100");
+  Checker();
+  Serial1.println("radio set fdev 100000");
+  Checker();
+  Serial1.println("radio set wdt 1000");
+  Checker();
+}
 bool makeConnection(){
     Serial1.println("radio tx 12345");
     Checker();
@@ -99,10 +103,10 @@ void Checker2() {
     String DataString=s.remove(0,9);
     DataString=DataString.trim();
     numPackets++;
-    if(numPackets==0){
+    if(numPackets==1){
          AllDataString=DataString;
     }
-    else if(numPackets>0&&numPackets<MaxNumPackets){
+    else if(numPackets>1&&numPackets<MaxNumPackets){
          AllDataString.concat(DataString);
     }
     else{
@@ -164,19 +168,19 @@ bool CheckRadioRxStatus(){
     }
 }
 
-void Send(char in[6400]){
+void Send(char in[CharPerSend]){
 
 if (millis() - lastPublish >= 2000) {
 		lastPublish = millis();
 
-		char buf[6400];
+		char buf[CharPerSend];
 		String s1 = "LA";
        // String s2 = in;
-       char val[6400];
+       char val[CharPerSend];
         const char *ptr;
         ptr = &val[0];
         int i;
-        for (i =0; i <6400; i = i+1){
+        for (i =0; i <CharPerSend; i = i+1){
         val[i] = in[i];
         }
 //         Serial.printlnf("s2");
@@ -185,6 +189,6 @@ if (millis() - lastPublish >= 2000) {
 // 		 Serial1.printlnf(ptr);
 		snprintf(buf, sizeof(buf), "{ \"Data\":\"%s\",\"Channel\":\"%s\"}",
 				ptr,s1.c_str());
-		Particle.publish("heartdata", buf, 60, PRIVATE);
+		Particle.publish("heartdata", buf, CharPerSend, PRIVATE);
 	}
 }
