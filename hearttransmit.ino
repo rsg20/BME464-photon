@@ -4,14 +4,17 @@ int lastPublish = 0;
 String readString = "";
 const char* message[64];
 String result;
-char resultChar[64];
-char newCharArray[100];
-char r3Char[30];
-char finalChar[100];
+
 const char* value;
 unsigned long interval = 5000;
 String sout;
 int numPackets=0;
+int MaxNumPackets=1000;
+int CharPerPacket=64;
+int CharPerSend=MaxNumPackets*CharPerPacket;
+char newCharArray[100];
+char r3Char[30];
+char finalChar[100];
 String AllDataString;
 String FullData;
 
@@ -54,14 +57,14 @@ void loop() {
 unsigned long prevMillis = 0;
 unsigned long currMillis = millis();
 
-// bool Connecting = true;
-// while(Connecting) {
-//     Connecting = makeConnection();
-// }
+bool Connecting = true;
+while(Connecting) {
+    Connecting = makeConnection();
+}
 
-//Serial1.println("radio rx 0");
-//Checker();
-//Checker2();
+Serial1.println("radio rx 0");
+Checker();
+Checker2();
 
 //Send();
 // Serial1.println("radio rx 0");
@@ -82,7 +85,8 @@ bool makeConnection(){
     Checker();
     Serial1.println("radio rx 0");
     Checker();
-    CheckRadioRxStatus();
+    bool ContinueCheck=CheckRadioRxStatus();
+    return ContinueCheck;
 }
 
 void Checker() {
@@ -92,39 +96,39 @@ void Checker() {
 }
 void Checker2() {
     String s = Serial1.readStringUntil('\n');
+    String DataString=s.remove(0,9);
+    DataString=DataString.trim();
     numPackets++;
-
     if(numPackets==0){
-        AllDataString=s;
+         AllDataString=DataString;
     }
-    else if(numPackets>0&&numPackets<1000){
-         AllDataString.concat(s);
+    else if(numPackets>0&&numPackets<MaxNumPackets){
+         AllDataString.concat(DataString);
     }
     else{
-        FullData=AllDataString;
+        String FullData=AllDataString;
+        // delay(5);
+        // value = FullData.c_str();
+        // message[0] =value;
+        //std::string s2(value);
+        //Serial.printlnf("saved %s", s2);
+        char FullCharData[CharPerSend];
+        FullData.toCharArray(FullCharData,CharPerSend);
+        // Serial.printlnf("charArray: ");
+        // Serial.printlnf(resultChar);
+        // int i =0;
+        // for(i=0;i<64;i=i+1){
+        // newCharArray[i]= resultChar[(i+10)];
+        // }
+        Send(FullCharData);
+        numPackets=0;
+        // // Serial.printlnf("cut: ");
+        // // Serial.printlnf(r2Char);
+        // sout = r2Char;
+        // // Serial.printlnf("String");
+        // // Serial.printlnf(sout);
+        // String send = sout;
     }
-
-
-   // delay(5);
-    value = s.c_str();
-   // message[0] =value;
-    //std::string s2(value);
-    //Serial.printlnf("saved %s", s2);
-    s.toCharArray(resultChar,80);
-    // Serial.printlnf("charArray: ");
-    // Serial.printlnf(resultChar);
-    int i =0;
-    for(i=0;i<64;i=i+1){
-    newCharArray[i]= resultChar[(i+10)];
-    }
-    Send(newCharArray);
-    // // Serial.printlnf("cut: ");
-    // // Serial.printlnf(r2Char);
-    // sout = r2Char;
-    // // Serial.printlnf("String");
-    // // Serial.printlnf(sout);
-    // String send = sout;
-
 }
 
 // void Checker3() {
