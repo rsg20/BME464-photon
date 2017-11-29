@@ -56,7 +56,7 @@ void loop() {
 
 unsigned long prevMillis = 0;
 unsigned long currMillis = millis();
-
+//Daniel Wu is _______
 bool Connecting = true;
 while(Connecting) {
     Connecting = makeConnection();
