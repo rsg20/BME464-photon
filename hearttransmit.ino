@@ -9,7 +9,7 @@ const char* value;
 unsigned long interval = 5000;
 String sout;
 int numPackets=0;
-int MaxNumPackets=1000;
+int MaxNumPackets=100;
 int CharPerPacket=64;
 int CharPerSend=MaxNumPackets*CharPerPacket;
 char newCharArray[100];
@@ -169,17 +169,17 @@ bool CheckRadioRxStatus(){
     // }
 }
 
-void Send(char in[CharPerSend]) {
+void Send(char in[6400]) {
 		lastPublish = millis();
 
-		char buf[CharPerSend];
+		char buf[6400];
 		String s1 = "LA";
        // String s2 = in;
-       char val[CharPerSend];
+        char val[6400];
         const char *ptr;
         ptr = &val[0];
         int i;
-        for (i =0; i <CharPerSend; i = i+1){
+        for (i =0; i <6400; i = i+1){
         val[i] = in[i];
         }
 //         Serial.printlnf("s2");
@@ -188,5 +188,5 @@ void Send(char in[CharPerSend]) {
 // 		 Serial1.printlnf(ptr);
 		snprintf(buf, sizeof(buf), "{ \"Data\":\"%s\",\"Channel\":\"%s\"}",
 				ptr,s1.c_str());
-		Particle.publish("heartdata", buf, CharPerSend, PRIVATE);
+		Particle.publish("heartdata", buf, 60, PRIVATE);
 }
