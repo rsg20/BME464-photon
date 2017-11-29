@@ -169,7 +169,7 @@ bool CheckRadioRxStatus(){
     // }
 }
 
-void Send(char in[CharPerSend]){
+void Send(char in[CharPerSend]) {
 		lastPublish = millis();
 
 		char buf[CharPerSend];
