@@ -83,6 +83,7 @@ void RNInit(){
   Serial1.println("radio set wdt 1000");
   Checker();
 }
+
 bool makeConnection(){
     Serial1.println("radio tx 12345");
     Checker();
@@ -169,8 +170,6 @@ bool CheckRadioRxStatus(){
 }
 
 void Send(char in[CharPerSend]){
-
-if (millis() - lastPublish >= 2000) {
 		lastPublish = millis();
 
 		char buf[CharPerSend];
@@ -190,5 +189,4 @@ if (millis() - lastPublish >= 2000) {
 		snprintf(buf, sizeof(buf), "{ \"Data\":\"%s\",\"Channel\":\"%s\"}",
 				ptr,s1.c_str());
 		Particle.publish("heartdata", buf, CharPerSend, PRIVATE);
-	}
 }
