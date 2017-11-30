@@ -35,33 +35,16 @@ void setup() {
 //How does it terminate string until
 void loop() {
 
-unsigned long prevMillis = 0;
-unsigned long currMillis = millis();
-//Daniel Wu is _______
-bool Connecting = true;
-while(Connecting) {
-    Connecting = makeConnection();
+  unsigned long prevMillis = 0;
+  unsigned long currMillis = millis();
+
+  Serial1.println("radio rx 0");
+  Checker();
+  Checker2();
 }
 
-Serial1.println("radio rx 0");
-Checker();
-Checker2();
-
-//Send();
-// Serial1.println("radio rx 0");
-// Checker();
-// Checker3();
-// int i=0;
-// for (i =0; i<20; i=i+1){
-//     finalChar[i] = r2Char[i];
-//     finalChar[i+20]= r3Char[i];
-// }
-// Serial.printlnf("final");
-// Serial.printlnf(finalChar);
- }
-
-
 void RNInit(){
+  //Initialization parameters
   Serial1.println("U");
   Checker();
   Serial1.println("mac pause");
@@ -84,108 +67,77 @@ void RNInit(){
   Checker();
 }
 
+void ConnectToPIC(){
+   //Continuosly sends a packet to the PIC and listens for response
+    bool Connecting = true;
+    while(Connecting) {
+        Connecting = makeConnection();
+    }
+}
+
 bool makeConnection(){
+    //Transmits a packet and reads the response
     Serial1.println("radio tx 12345");
     Checker();
     Checker();
     Serial1.println("radio rx 0");
     Checker();
-    bool ContinueCheck=CheckRadioRxStatus();
-    return ContinueCheck;
+    String s = Serial1.readStringUntil('\n');
+    bool RadioReceived=CheckRadioRx(s);
+    return !RadioReceived;
 }
 
 void Checker() {
+  //Checks for any response
     String s = Serial1.readStringUntil('\n');
-    //Serial.printlnf("got %s", s.c_str());
-    // delay(5);
 }
+
 void Checker2() {
+  //Checks for the radio receive response - concatenates and publishes packet once fully read
     String s = Serial1.readStringUntil('\n');
-    String DataString=s.remove(0,9);
-    DataString=DataString.trim();
-    numPackets++;
-    if(numPackets==1){
-         AllDataString=DataString;
-    }
-    else if(numPackets>1&&numPackets<MaxNumPackets){
-         AllDataString.concat(DataString);
-    }
-    else{
-        String FullData=AllDataString;
-        // delay(5);
-        // value = FullData.c_str();
-        // message[0] =value;
-        //std::string s2(value);
-        //Serial.printlnf("saved %s", s2);
-        char FullCharData[CharPerSend];
-        FullData.toCharArray(FullCharData,CharPerSend);
-        // Serial.printlnf("charArray: ");
-        // Serial.printlnf(resultChar);
-        // int i =0;
-        // for(i=0;i<64;i=i+1){
-        // newCharArray[i]= resultChar[(i+10)];
-        // }
-        Send(FullCharData);
-        numPackets=0;
-        // // Serial.printlnf("cut: ");
-        // // Serial.printlnf(r2Char);
-        // sout = r2Char;
-        // // Serial.printlnf("String");
-        // // Serial.printlnf(sout);
-        // String send = sout;
+    if(CheckRadioRx(s)){
+        String DataString=s.remove(0,8);
+        DataString=DataString.trim();
+        numPackets++;
+        if(numPackets==1){
+             AllDataString=DataString;
+        }
+        else if(numPackets>1&&numPackets<MaxNumPackets){
+             AllDataString.concat(DataString);
+        }
+        else{
+            String FullData=AllDataString;
+            char FullCharData[CharPerSend];
+            FullData.toCharArray(FullCharData,CharPerSend);
+            Send(FullCharData);
+            numPackets=0;
+        }
     }
 }
 
-// void Checker3() {
-//     String s = Serial1.readStringUntil('\n');
-//     Serial.printlnf("got %s", s.c_str());
-//     //delay(5);
-//     value = s.c_str();
-//   // message[0] =value;
-//     //std::string s2(value);
-//     //Serial.printlnf("saved %s", s2);
-//     s.toCharArray(resultChar,30);
-//     Serial.printlnf("charArray: ");
-//     Serial.printlnf(resultChar);
-//     int i =0;
-//     for(i=0;i<20;i=i+1){
-//     r3Char[i]= resultChar[(i+10)];
-//     }
-//     Serial.printlnf("cut2: ");
-//     Serial.printlnf(r3Char);
-// }
-
-bool CheckRadioRxStatus(){
-    String s = Serial1.readStringUntil('\n');
+bool CheckRadioRx(String s){ //Returns True when the radio received something, false when error or garbage
     String Status = s.substring(0,8);
     if(strcmp(Status, "radio_rx ")){
-        return false;
-    }
-    else if(strcmp(Status, "radio_err")){
         return true;
     }
-    // else{
-    //     return true;
-    // }
+    else if(strcmp(Status, "radio_err")){
+        return false;
+    }
+    else{
+        return false;
+    }
 }
 
-void Send(char in[6400]) {
-		lastPublish = millis();
-
-		char buf[6400];
+void Send(char in[]) {
+		char buf[CharPerSend];
 		String s1 = "LA";
-       // String s2 = in;
-        char val[6400];
-        const char *ptr;
-        ptr = &val[0];
-        int i;
-        for (i =0; i <6400; i = i+1){
-        val[i] = in[i];
-        }
-//         Serial.printlnf("s2");
-// 		 Serial.printlnf(in);
-// 		 Serial1.printlnf("ptr");
-// 		 Serial1.printlnf(ptr);
+    char val[CharPerSend];
+    const char *ptr;
+    ptr = &val[0];
+    int i;
+    for (i =0; i <CharPerSend; i = i+1){
+    val[i] = in[i];
+    }
 		snprintf(buf, sizeof(buf), "{ \"Data\":\"%s\",\"Channel\":\"%s\"}",
 				ptr,s1.c_str());
 		Particle.publish("heartdata", buf, 60, PRIVATE);
