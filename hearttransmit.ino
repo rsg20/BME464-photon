@@ -117,14 +117,18 @@ void Checker2() {
 
 bool CheckRadioRx(String s){ //Returns True when the radio received something, false when error or garbage
     String Status = s.substring(0,8);
-    if(strcmp(Status, "radio_rx ")){
+    if(!(strcmp(Status, "radio_rx "))){
         return true;
+        Serial1.println("rx");
     }
-    else if(strcmp(Status, "radio_err")){
+    else if(!(strcmp(Status, "radio_err"))){
         return false;
+        Serial1.println("err");
     }
     else{
         return false;
+        Serial1.println("bad");
+
     }
 }
 
