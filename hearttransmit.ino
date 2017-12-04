@@ -9,7 +9,7 @@ const char* value;
 unsigned long interval = 5000;
 String sout;
 int numPackets=0;
-int MaxNumPackets=100;
+int MaxNumPackets=10;
 int CharPerPacket=64;
 int CharPerSend=MaxNumPackets*CharPerPacket;
 char newCharArray[100];
@@ -38,6 +38,8 @@ void loop() {
   unsigned long prevMillis = 0;
   unsigned long currMillis = millis();
 
+// ConnectToPIC();
+
   Serial1.println("radio rx 0");
   Checker();
   Checker2();
@@ -55,7 +57,7 @@ void RNInit(){
   Checker();
   Serial1.println("radio set bitrate 250000");
   Checker();
-  Serial1.println("radio set prlen 48");
+  Serial1.println("radio set prlen 100");
   Checker();
   Serial1.println("radio set afcbw 166.7");
   Checker();
@@ -116,26 +118,22 @@ void Checker2() {
 }
 
 bool CheckRadioRx(String s){ //Returns True when the radio received something, false when error or garbage
-    String Status = s.substring(0,8);
-    if(!(strcmp(Status, "radio_rx "))){
+    String Status = s.substring(0,9);
+    if(strcmp(Status, "radio_rx ")==0){
         return true;
-        Serial1.println("rx");
     }
-    else if(!(strcmp(Status, "radio_err"))){
+    else if(strcmp(Status, "radio_err")==0){
         return false;
-        Serial1.println("err");
     }
     else{
         return false;
-        Serial1.println("bad");
-
     }
 }
 
 void Send(char in[]) {
-		char buf[CharPerSend];
-		String s1 = "LA";
-    char val[CharPerSend];
+	char buf[CharPerSend+1000];
+	String s1 = "LA";
+    char val[CharPerSend+1000];
     const char *ptr;
     ptr = &val[0];
     int i;
