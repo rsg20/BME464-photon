@@ -1,5 +1,6 @@
 #include "Particle.h"
 #include "string.h"
+TCPClient client;
 int lastPublish = 0;
 String readString = "";
 const char* message[64];
@@ -34,15 +35,19 @@ void setup() {
 // Replace /n with a zero for strcmp!!
 //How does it terminate string until
 void loop() {
-
+  client.connect("vcm-2331.vm.duke.edu",5000);
   unsigned long prevMillis = 0;
+  String DataString="1234567890123456789012345678901234567890123456789012345678901234";
+  Serial.println("Printing");
+  client.print(DataString);
   unsigned long currMillis = millis();
-
+  client.stop();
+  Serial.println("Printed")
 // ConnectToPIC();
 
-  Serial1.println("radio rx 0");
-  Checker();
-  Checker2();
+  // Serial1.println("radio rx 0");
+  // Checker();
+  // CheckerTCPPrint();
 }
 
 void RNInit(){
@@ -94,7 +99,7 @@ void Checker() {
     String s = Serial1.readStringUntil('\n');
 }
 
-void Checker2() {
+void CheckerPublishSend() {
   //Checks for the radio receive response - concatenates and publishes packet once fully read
     String s = Serial1.readStringUntil('\n');
     if(CheckRadioRx(s)){
@@ -111,9 +116,19 @@ void Checker2() {
             String FullData=AllDataString;
             char FullCharData[CharPerSend];
             FullData.toCharArray(FullCharData,CharPerSend);
-            Send(FullCharData);
+            PublishSend(FullCharData);
             numPackets=0;
         }
+    }
+}
+
+void CheckerTCPPrint() {
+  //Checks for the radio receive response - concatenates and publishes packet once fully read
+    String s = Serial1.readStringUntil('\n');
+    if(CheckRadioRx(s)){
+        String DataString=s.remove(0,8);
+        DataString=DataString.trim();
+        client.print(DataString);
     }
 }
 
@@ -130,7 +145,7 @@ bool CheckRadioRx(String s){ //Returns True when the radio received something, f
     }
 }
 
-void Send(char in[]) {
+void PublishSend(char in[]) {
 	char buf[CharPerSend+1000];
 	String s1 = "LA";
     char val[CharPerSend+1000];
@@ -143,4 +158,20 @@ void Send(char in[]) {
 		snprintf(buf, sizeof(buf), "{ \"Data\":\"%s\",\"Channel\":\"%s\"}",
 				ptr,s1.c_str());
 		Particle.publish("heartdata", buf, 60, PRIVATE);
+}
+
+
+void TCPSend(char in[]) {
+	char buf[CharPerSend+50];
+	String s1 = "LA";
+    char val[CharPerSend+50];
+    const char *ptr;
+    ptr = &val[0];
+    int i;
+    for (i =0; i <CharPerSend; i = i+1){
+    val[i] = in[i];
+    }
+		snprintf(buf, sizeof(buf), "{ \"Data\":\"%s\",\"Channel\":\"%s\"}",
+				ptr,s1.c_str());
+		client.write(buf);
 }
