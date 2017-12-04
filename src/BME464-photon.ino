@@ -35,19 +35,11 @@ void setup() {
 // Replace /n with a zero for strcmp!!
 //How does it terminate string until
 void loop() {
-  client.connect("vcm-2331.vm.duke.edu",5000);
-  unsigned long prevMillis = 0;
-  String DataString="1234567890123456789012345678901234567890123456789012345678901234";
-  Serial.println("Printing");
-  client.print(DataString);
-  unsigned long currMillis = millis();
-  client.stop();
-  Serial.println("Printed")
 // ConnectToPIC();
 
-  // Serial1.println("radio rx 0");
-  // Checker();
-  // CheckerTCPPrint();
+  Serial1.println("radio rx 0");
+  Checker();
+  CheckerTCPPrint();
 }
 
 void RNInit(){
@@ -128,7 +120,10 @@ void CheckerTCPPrint() {
     if(CheckRadioRx(s)){
         String DataString=s.remove(0,8);
         DataString=DataString.trim();
+        client.connect("67.159.88.156",5000);
         client.print(DataString);
+        client.stop();
+
     }
 }
 
