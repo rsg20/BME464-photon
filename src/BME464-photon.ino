@@ -22,6 +22,7 @@ String FullData;
 SYSTEM_THREAD(ENABLED);
 
 void setup() {
+  client.connect("67.159.88.156",5000);
   delay(1000);
   digitalWrite(TX, LOW);
   delay(1000);
@@ -120,10 +121,9 @@ void CheckerTCPPrint() {
     if(CheckRadioRx(s)){
         String DataString=s.remove(0,8);
         DataString=DataString.trim();
-        client.connect("67.159.88.156",5000);
+        if(client.connected()) {
         client.print(DataString);
-        client.stop();
-
+      }
     }
 }
 
