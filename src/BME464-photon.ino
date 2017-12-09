@@ -9,8 +9,16 @@ String result;
 const char* value;
 unsigned long interval = 5000;
 String sout;
-int numPackets=0;
-int MaxNumPackets=10;
+
+int channel;
+int t_duration;
+int pulse_width_duration;
+int pulse_amplitude;
+String str;
+String str2;
+
+int numPackets;
+int MaxNumPackets;
 int CharPerPacket=64;
 int CharPerSend=MaxNumPackets*CharPerPacket;
 char newCharArray[100];
@@ -22,7 +30,6 @@ String FullData;
 SYSTEM_THREAD(ENABLED);
 
 void setup() {
-  client.connect("67.159.88.156",5000);
   delay(1000);
   digitalWrite(TX, LOW);
   delay(1000);
@@ -30,7 +37,10 @@ void setup() {
   Serial1.begin(115200);
   Serial1.setTimeout(15000);
   delay(1000);
+  Particle.subscribe("hook-response/heartparams", gotData, MY_DEVICES);
+  // Particle.variable("channel", &channel, INT);
   RNInit();
+  numPackets=0;
 }
 
 // Replace /n with a zero for strcmp!!
@@ -38,9 +48,33 @@ void setup() {
 void loop() {
 // ConnectToPIC();
 
-  Serial1.println("radio rx 0");
-  Checker();
-  CheckerTCPPrint();
+unsigned long StartMillis=millis();
+String data = String(15);
+Particle.publish("heartparams", data, PRIVATE);
+
+  bool PICConnect = false;
+  while(!PICConnect) {
+    if(millis()-StartMillis > 2000) {
+      break;
+    }
+      PICConnect = makeConnection();
+
+      if(PICConnect){
+        while(numPackets<MaxNumPackets){
+          Serial1.println("radio rx 0");
+          Checker();
+          CheckerTCPPrint();
+        }
+        numPackets=0;
+      }
+  }
+
+//
+// Serial1.println("radio rx 0");
+// Checker();
+// CheckerTCPPrint();
+
+
 }
 
 void RNInit(){
@@ -55,7 +89,7 @@ void RNInit(){
   Checker();
   Serial1.println("radio set bitrate 250000");
   Checker();
-  Serial1.println("radio set prlen 100");
+  Serial1.println("radio set prlen 48");
   Checker();
   Serial1.println("radio set afcbw 166.7");
   Checker();
@@ -67,35 +101,13 @@ void RNInit(){
   Checker();
 }
 
-void ConnectToPIC(){
-   //Continuosly sends a packet to the PIC and listens for response
-    bool Connecting = true;
-    while(Connecting) {
-        Connecting = makeConnection();
-    }
-}
-
-bool makeConnection(){
-    //Transmits a packet and reads the response
-    Serial1.println("radio tx 12345");
-    Checker();
-    Checker();
-    Serial1.println("radio rx 0");
-    Checker();
-    String s = Serial1.readStringUntil('\n');
-    bool RadioReceived=CheckRadioRx(s);
-    return !RadioReceived;
-}
-
 void Checker() {
   //Checks for any response
     String s = Serial1.readStringUntil('\n');
 }
 
-void CheckerPublishSend() {
+void ConcatDataStrings(String s) {
   //Checks for the radio receive response - concatenates and publishes packet once fully read
-    String s = Serial1.readStringUntil('\n');
-    if(CheckRadioRx(s)){
         String DataString=s.remove(0,8);
         DataString=DataString.trim();
         numPackets++;
@@ -105,31 +117,30 @@ void CheckerPublishSend() {
         else if(numPackets>1&&numPackets<MaxNumPackets){
              AllDataString.concat(DataString);
         }
-        else{
+        else if(numPackets==MaxNumPackets){
+            AllDataString.concat(DataString);
             String FullData=AllDataString;
-            char FullCharData[CharPerSend];
-            FullData.toCharArray(FullCharData,CharPerSend);
-            PublishSend(FullCharData);
-            numPackets=0;
+            client.connect("67.159.88.56",5000);
+            delay(500);
+            if(client.connected()){
+            Serial1.println("we are printing" +FullData);
+            Checker();
+            client.print(FullData);
+            }
+            client.stop();
         }
     }
-}
 
 void CheckerTCPPrint() {
-  //Checks for the radio receive response - concatenates and publishes packet once fully read
+  //Checks for the radio receive response -publishes packet once fully read
     String s = Serial1.readStringUntil('\n');
-    if(CheckRadioRx(s)){
-        String DataString=s.remove(0,8);
-        DataString=DataString.trim();
-        if(client.connected()) {
-        client.print(DataString);
-      }
-    }
+    CheckRadioRx(s);
 }
 
 bool CheckRadioRx(String s){ //Returns True when the radio received something, false when error or garbage
     String Status = s.substring(0,9);
     if(strcmp(Status, "radio_rx ")==0){
+        ConcatDataStrings(s);
         return true;
     }
     else if(strcmp(Status, "radio_err")==0){
@@ -140,33 +151,84 @@ bool CheckRadioRx(String s){ //Returns True when the radio received something, f
     }
 }
 
-void PublishSend(char in[]) {
-	char buf[CharPerSend+1000];
-	String s1 = "LA";
-    char val[CharPerSend+1000];
-    const char *ptr;
-    ptr = &val[0];
-    int i;
-    for (i =0; i <CharPerSend; i = i+1){
-    val[i] = in[i];
-    }
-		snprintf(buf, sizeof(buf), "{ \"Data\":\"%s\",\"Channel\":\"%s\"}",
-				ptr,s1.c_str());
-		Particle.publish("heartdata", buf, 60, PRIVATE);
+void gotData(const char *event, const char *data){
+    str = String(data);
+    // Serial1.print("data: ");
+    // Serial1.print("\n");
+
+
+    int ch = str.indexOf("pace_channel");
+    int ptd = str.indexOf("pace_time_duration");
+    int pwd = str.indexOf("pulse_width_duration");
+    int pa = str.indexOf("pulse_amplitude");
+    int rc = str.indexOf("record_channel");
+    int rd = str.indexOf("record_duration");
+
+    // int chEnd = str.lastIndexOf('''', ptd);
+    // int ptdEnd = str.lastIndexOf(',', pwd);
+    // int pwdEnd = str.lastIndexOf(',', pa);
+    // int paEnd = str.lastIndexOf(',', rc);
+    // int rcEnd = str.lastIndexOf('''', rd);
+    // int rdEnd = str.lastIndexOf('''');
+
+
+    // int m = str.indexOf("time_duration");
+    //  Serial1.print("rd");
+    //  Serial1.print(rd);
+    //  Serial1.print("\n");
+    // //  Serial.print("\n");
+    // //  Serial.print(m);
+    // // channel = atoi(str.substring(ch + 9, ch + 12));
+    //  String s = str.substring(rd+17,rd+18);
+    //  Serial1.print(s);
+    //  Serial1.print("\n");
+
+    //FORMING STR to send
+    str2 = "A";
+    str2+=  str.substring(ch+15,ch+16);
+    str2 += "B";
+    str2 += str.substring(ptd+20,ptd+21);
+    str2 += "C";
+    str2 += str.substring(pwd+22,pwd+23);
+    str2 += "D";
+    str2 += str.substring(pa+17,pa+19);
+    str2 += "E";
+    str2 += str.substring(rc+17,rc+18);
+    str2 += "F";
+    str2 += str.substring(rd+17,rd+19);
+    String MaxPacketStr=str.substring(rd+17,rd+19);
+
+    MaxNumPackets=MaxPacketStr.toInt();
+    //
+    // str2 = "A";
+    // str2+=  str.substring(ch+15,chEnd);
+    // str2 += "B";
+    // str2 += str.substring(ptd+20,ptdEnd);
+    // str2 += "C";
+    // str2 += str.substring(pwd+22,pwdEnd);
+    // str2 += "D";
+    // str2 += str.substring(pa+17,paEnd);
+    // str2 += "E";
+    // str2 += str.substring(rc+17,rcEnd);
+    // str2 += "F";
+    // str2 += str.substring(rd+17,rdEnd);
+    // str2.trim();
+    // Serial1.print("str ");
+    // Serial1.print(str2);
+    // Serial1.print("\n");
+    // Serial.print("\n");
+    // Serial.print(channel);
 }
 
-
-void TCPSend(char in[]) {
-	char buf[CharPerSend+50];
-	String s1 = "LA";
-    char val[CharPerSend+50];
-    const char *ptr;
-    ptr = &val[0];
-    int i;
-    for (i =0; i <CharPerSend; i = i+1){
-    val[i] = in[i];
-    }
-		snprintf(buf, sizeof(buf), "{ \"Data\":\"%s\",\"Channel\":\"%s\"}",
-				ptr,s1.c_str());
-		client.write(buf);
+bool makeConnection(){
+    //Transmits a packet and reads the response
+    Serial1.println("radio tx " + str2);
+    Serial1.flush();
+    Checker();
+    Checker();
+    Serial1.println("radio rx 0");
+    Checker();
+    String s = Serial1.readStringUntil('\n');
+    bool RadioReceived=CheckRadioRx(s);
+    return RadioReceived;
 }
