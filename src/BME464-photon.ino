@@ -123,9 +123,10 @@ void ConcatDataStrings(String s) {
             client.connect("67.159.88.56",5000);
             delay(500);
             if(client.connected()){
-            Serial1.println("we are printing" +FullData);
-            Checker();
-            client.print(FullData);
+              Serial1.println("we are printing" +FullData);
+              Checker();
+              client.print(FullData);
+              client.print("stop");
             }
             client.stop();
         }
@@ -195,10 +196,11 @@ void gotData(const char *event, const char *data){
     str2 += "E";
     str2 += str.substring(rc+17,rc+18);
     str2 += "F";
-    str2 += str.substring(rd+17,rd+19);
-    String MaxPacketStr=str.substring(rd+17,rd+19);
+    str2 += str.substring(rd+17,rd+20);
+    String MaxPacketStr=str.substring(rd+17,rd+20);
 
     MaxNumPackets=MaxPacketStr.toInt();
+    // MaxNumPackets  = 500;
     //
     // str2 = "A";
     // str2+=  str.substring(ch+15,chEnd);
